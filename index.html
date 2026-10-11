@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo-Arcadia: Echoes of Utopia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        pixel: ['"Press Start 2P"', 'monospace'],
+                        vt323: ['VT323', 'monospace'],
+                        rajdhani: ['Rajdhani', 'sans-serif'],
+                    },
+                    colors: {
+                        arcadia: {
+                            gold: '#f1c40f',
+                            teal: '#00f2fe',
+                            violet: '#9b59b6',
+                            dark: '#080612',
+                            card: 'rgba(12, 10, 28, 0.92)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #05030a;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        /* 8-bit Pixel Frame & Boxes */
+        .pixel-box {
+            background: rgba(10, 8, 22, 0.94);
+            border: 4px solid #9b59b6;
+            box-shadow: 
+                inset -4px -4px 0px 0px #4a235a,
+                inset 4px 4px 0px 0px #d7bde2,
+                0px 0px 15px rgba(155, 89, 182, 0.4);
+        }
+
+        .pixel-btn {
+            border: 3px solid #00f2fe;
+            box-shadow: inset -3px -3px 0px 0px #007799, inset 3px 3px 0px 0px #a6f7ff;
+            transition: all 0.15s ease;
+        }
+
+        .pixel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: inset -3px -3px 0px 0px #005577, inset 3px 3px 0px 0px #ffffff, 0 0 14px #00f2fe;
+        }
+
+        .pixel-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* CRT Overlay Effect */
+        .crt-overlay {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            );
+            background-size: 100% 4px;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .glow-cyan {
+            text-shadow: 0 0 8px rgba(0, 242, 254, 0.6);
+        }
+
+        .glow-gold {
+            text-shadow: 0 0 8px rgba(241, 196, 15, 0.6);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.35s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        canvas {
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-purple-600 selection:text-white">
+
+    <canvas id="city-bg-canvas" class="fixed inset-0 w-full h-full z-0 pointer-events-none"></canvas>
+    
+    <!-- CRT Overlay Layer -->
+    <div class="crt-overlay fixed inset-0 w-full h-full"></div>
+
+    <!-- Intro Context Modal (in Spanish as requested) -->
+    <div id="intro-modal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
+        <div class="max-w-2xl w-full pixel-box p-6 sm:p-8 text-center relative overflow-hidden fade-in">
+            <div class="w-16 h-16 mx-auto bg-purple-900 border-2 border-cyan-400 flex items-center justify-center mb-4 text-3xl text-cyan-300 shadow-xl">
+                <i class="fa-solid fa-gamepad"></i>
+            </div>
+            
+            <h2 class="text-xl sm:text-2xl font-pixel font-bold text-cyan-300 glow-cyan mb-2">
+                NEO-ARCADIA
+            </h2>
+            <p class="text-lg font-vt323 text-amber-300 tracking-widest uppercase mb-4">8-BIT FUTURISTIC FANTASY • ESL DIPLOMATIC SIMULATOR</p>
+
+            <div class="bg-black/90 p-5 border-2 border-purple-500/80 text-left mb-6 space-y-3 font-rajdhani text-lg text-slate-100 leading-relaxed">
+                <p>
+                    <strong class="text-amber-400 font-bold">BIENVENIDO:</strong> Representas a la delegación diplomática extranjera en la utópica metrópolis de fantasía futurista llamada <strong>Neo-Arcadia</strong>. Tu objetivo es interactuar con 5 líderes de la ciudad para negociar la integración intercultural mediante inglés avanzado, diplomacia y precisión gramatical.
+                </p>
+                <p>
+                    <strong class="text-cyan-300 font-bold">CÓMO JUGAR:</strong>
+                </p>
+                <ul class="list-disc list-inside space-y-1.5 text-slate-200 pl-2">
+                    <li>Interactúa a través de <strong>5 escenas consecutivas</strong> conversando con 5 personajes únicos.</li>
+                    <li>Cada elección evalúa tu tono, gramática avanzada en inglés y tacto diplomático.</li>
+                    <li>Gana <strong>Puntos de Afinidad</strong> según la calidad lingüística de tus respuestas (+10, +5 o 0 puntos).</li>
+                    <li>¡Tu puntuación acumulada desbloqueará uno de <strong>3 finales distintos</strong>!</li>
+                </ul>
+            </div>
+
+            <button onclick="startGame()" class="pixel-btn px-8 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-base shadow-lg transition-all rounded-none uppercase tracking-wider">
+                <i class="fa-solid fa-play mr-2"></i> START SIMULATION
+            </button>
+        </div>
+    </div>
+
+    <header class="w-full pixel-box border-b-4 border-purple-600 p-3 sticky top-0 z-40 bg-slate-950/90">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <!-- Game Title -->
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-purple-900 border-2 border-cyan-400 text-cyan-300">
+                    <i class="fa-solid fa-gem text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-pixel text-xs sm:text-sm text-cyan-300 glow-cyan tracking-wider">
+                        NEO-ARCADIA
+                    </h1>
+                    <p class="text-xs text-purple-300 font-vt323 tracking-widest uppercase">ECHOES OF UTOPIA • DIPLOMATIC SIMULATOR</p>
+                </div>
+            </div>
+
+            <!-- Scene Indicator -->
+            <div class="font-pixel text-[10px] bg-black px-4 py-2 border-2 border-purple-500 text-cyan-300 shadow-inner">
+                <i class="fa-solid fa-compass text-amber-400 mr-2"></i>
+                <span id="scene-indicator">SCENE 1 / 5</span>
+            </div>
+
+            <!-- Affinity Score Meter -->
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+                <div class="text-right">
+                    <div class="text-[10px] text-slate-300 font-pixel uppercase tracking-widest">AFFINITY</div>
+                    <div class="font-pixel text-xs text-amber-400 glow-gold mt-1" id="affinity-text">0 / 50 PTS</div>
+                </div>
+                <div class="w-28 bg-black h-4 border-2 border-purple-500 p-0.5">
+                    <div id="affinity-bar" class="bg-gradient-to-r from-amber-400 via-purple-400 to-cyan-400 h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Narrative Story Context Bar placed directly beneath title as requested -->
+    <div class="w-full max-w-5xl mx-auto px-3 mt-3 relative z-10">
+        <div class="bg-slate-950/90 border-2 border-purple-500/70 p-3 flex items-center space-x-3 text-slate-200">
+            <i class="fa-solid fa-scroll text-amber-400 text-lg"></i>
+            <p id="story-context-text" class="text-sm sm:text-base font-rajdhani font-semibold text-purple-200 leading-snug">
+                <strong>STORY LORE:</strong> Year 2188. In the magical futuristic metropolis of Neo-Arcadia, foreign delegates must prove their linguistic mastery to unite mystical technology and high-tech diplomacy.
+            </p>
+        </div>
+    </div>
+
+    <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-5 flex flex-col justify-center items-center relative z-10 my-1">
+        
+        <!-- Environment Banner -->
+        <div class="w-full p-3 sm:p-4 pixel-box border-b-0 flex items-center justify-between bg-black/80">
+            <div>
+                <span id="location-badge" class="px-2.5 py-1 bg-purple-900 text-purple-200 border border-purple-400 text-xs font-bold uppercase tracking-wider">
+                    LOCATION: Grand Aetheria Embassy
+                </span>
+                <h2 id="scene-title" class="text-base sm:text-lg font-pixel font-bold text-cyan-300 mt-2 glow-cyan">
+                    Scene 1: Welcoming Protocol
+                </h2>
+            </div>
+
+            <div class="hidden md:block text-3xl text-purple-400">
+                <i id="location-icon" class="fa-solid fa-building-columns"></i>
+            </div>
+        </div>
+
+        <!-- Dialogue & Character Card Container -->
+        <div class="w-full pixel-box p-4 sm:p-6 flex flex-col md:flex-row gap-6 items-center md:items-start bg-slate-950/95">
+            
+            <!-- 8-Bit Pixel Canvas Avatar Frame -->
+            <div class="flex flex-col items-center flex-shrink-0">
+                <div class="w-36 h-44 sm:w-40 sm:h-48 border-4 border-cyan-400 bg-black relative flex items-center justify-center shadow-lg p-1">
+                    <canvas id="npc-pixel-canvas" width="64" height="64" class="w-full h-full object-contain image-pixelated"></canvas>
+                    <div id="npc-role-tag" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-purple-900 text-cyan-300 font-pixel text-[8px] px-2 py-1 uppercase tracking-wider whitespace-nowrap border border-cyan-300">
+                        SOLARPUNK DIPLOMAT
+                    </div>
+                </div>
+                <h3 id="npc-name" class="font-pixel text-xs text-amber-400 mt-3 glow-gold">
+                    Eugene
+                </h3>
+            </div>
+
+            <!-- Dialogue Box & Choice Mechanics -->
+            <div class="flex-1 w-full flex flex-col justify-between min-h-[260px]">
+                
+                <!-- Dialogue Text Display -->
+                <div class="bg-black/90 border-2 border-purple-500 p-4 mb-4 relative shadow-inner">
+                    <i class="fa-solid fa-quote-left text-xl text-purple-600/40 absolute top-2 left-2"></i>
+                    <p id="dialogue-text" class="text-xl sm:text-2xl text-slate-100 pl-5 relative z-10 font-vt323 tracking-wide leading-relaxed">
+                        "Welcome to Neo-Arcadia! I am Eugene..."
+                    </p>
+                </div>
+
+                <!-- Interactive Choice Options -->
+                <div id="choices-container" class="space-y-3">
+                    <!-- Dynamic Choice Buttons -->
+                </div>
+
+                <!-- Linguistic & Character Feedback Box -->
+                <div id="feedback-panel" class="hidden mt-4 p-4 border-2 transition-all duration-300 fade-in bg-black">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-2">
+                            <i id="feedback-icon" class="fa-solid fa-circle-check text-base"></i>
+                            <span id="feedback-title" class="font-bold text-sm uppercase tracking-wider text-cyan-300">Linguistic Analysis</span>
+                        </div>
+                        <span id="feedback-score" class="font-pixel text-[10px] px-2 py-1"></span>
+                    </div>
+                    
+                    <!-- In-Character Reaction Response -->
+                    <div class="mb-3 p-3 bg-purple-950/60 border border-purple-500 text-purple-200 font-rajdhani italic text-base">
+                        <span id="npc-reaction-speaker" class="font-bold text-amber-300 not-italic uppercase text-xs mr-2">[Eugene]:</span>
+                        <span id="npc-reaction-text">"Your response brings great joy..."</span>
+                    </div>
+
+                    <div id="feedback-text" class="text-lg font-vt323 text-slate-200 leading-snug tracking-wide"></div>
+                    <button id="next-btn" class="mt-4 w-full py-2.5 bg-gradient-to-r from-purple-600 to-cyan-500 hover:opacity-90 text-slate-950 font-bold text-sm border-2 border-cyan-300 shadow-lg flex items-center justify-center space-x-2 uppercase tracking-wider">
+                        <span>CONTINUE STORY</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Ending Screen Modal -->
+    <div id="ending-modal" class="fixed inset-0 bg-black/92 z-50 hidden flex items-center justify-center p-4">
+        <div class="max-w-2xl w-full pixel-box p-6 sm:p-8 text-center relative overflow-hidden fade-in">
+            
+            <span id="ending-subtitle" class="text-[10px] font-pixel tracking-widest uppercase text-amber-400 px-3 py-1 bg-black border border-amber-400">
+                EVALUATION COMPLETE
+            </span>
+
+            <h2 id="ending-title" class="text-lg sm:text-xl font-pixel font-bold text-cyan-300 mt-4 mb-2 glow-cyan">
+                Harmonious Equilibrium
+            </h2>
+            <p id="ending-score" class="text-2xl font-vt323 text-amber-300 mb-4">
+                Final Score: 50 / 50 Points
+            </p>
+
+            <!-- Ending Character Direct Speech Section -->
+            <div class="bg-black/90 p-4 border-2 border-purple-500 text-left mb-6 space-y-4">
+                <div class="flex items-center space-x-4 border-b border-purple-800 pb-3">
+                    <div class="w-16 h-20 border-2 border-cyan-400 bg-black flex-shrink-0 p-0.5">
+                        <canvas id="ending-npc-canvas" width="64" height="64" class="w-full h-full object-contain image-pixelated"></canvas>
+                    </div>
+                    <div>
+                        <h4 id="ending-speaker-name" class="font-pixel text-xs text-amber-400">Eugene</h4>
+                        <p id="ending-speaker-role" class="text-xs font-vt323 text-cyan-300 uppercase">Principal Spokesperson</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h5 class="text-xs font-bold text-purple-300 uppercase tracking-wider mb-1">DIRECT ADDRESS TO PLAYER:</h5>
+                    <p id="ending-character-dialogue" class="text-xl font-vt323 text-slate-100 italic leading-snug">
+                        "Your words resonated deeply with our vision..."
+                    </p>
+                </div>
+
+                <div class="pt-2 border-t border-purple-900">
+                    <p id="ending-description" class="text-base font-rajdhani text-slate-300 leading-normal">
+                        Your diplomatic mastery persuaded the High Council.
+                    </p>
+                </div>
+            </div>
+
+            <button onclick="restartGame()" class="pixel-btn px-6 py-3 bg-cyan-500 text-slate-950 font-bold text-sm shadow-lg uppercase tracking-wider">
+                <i class="fa-solid fa-rotate-right mr-2"></i> RESTART SIMULATION
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full p-2 text-center text-xs text-slate-400 border-t-2 border-purple-900 bg-black">
+        <p class="font-vt323 text-lg">Neo-Arcadia Sci-Fi Fantasy Engine • 8-Bit Pixel Art ESL Simulator</p>
+    </footer>
+
+    <script>
+        let audioCtx = null;
+
+        let currentSceneIndex = 0;
+        let totalAffinity = 0;
+        const maxAffinity = 50;
+
+        let introModal, sceneIndicator, affinityText, affinityBar;
+        let locationBadge, sceneTitle, locationIcon;
+        let npcName, npcRoleTag, dialogueText, choicesContainer;
+        let feedbackPanel, feedbackIcon, feedbackTitle, feedbackScore, feedbackText, nextBtn;
+        let endingModal;
+
+        function initDOMReferences() {
+            introModal = document.getElementById('intro-modal');
+            sceneIndicator = document.getElementById('scene-indicator');
+            affinityText = document.getElementById('affinity-text');
+            affinityBar = document.getElementById('affinity-bar');
+            locationBadge = document.getElementById('location-badge');
+            sceneTitle = document.getElementById('scene-title');
+            locationIcon = document.getElementById('location-icon');
+            npcName = document.getElementById('npc-name');
+            npcRoleTag = document.getElementById('npc-role-tag');
+            dialogueText = document.getElementById('dialogue-text');
+            choicesContainer = document.getElementById('choices-container');
+            feedbackPanel = document.getElementById('feedback-panel');
+            feedbackIcon = document.getElementById('feedback-icon');
+            feedbackTitle = document.getElementById('feedback-title');
+            feedbackScore = document.getElementById('feedback-score');
+            feedbackText = document.getElementById('feedback-text');
+            nextBtn = document.getElementById('next-btn');
+            endingModal = document.getElementById('ending-modal');
+
+            if (nextBtn) {
+                nextBtn.onclick = () => {
+                    currentSceneIndex++;
+                    if (currentSceneIndex < gameData.length) {
+                        loadScene(currentSceneIndex);
+                    } else {
+                        triggerEnding();
+                    }
+                };
+            }
+        }
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playFeedbackSound(points) {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                let freq = 261.63; // Default C note (0 points)
+
+                if (points === 10) {
+                    freq = 493.88; // Note B (493.88 Hz)
+                } else if (points === 5) {
+                    freq = 392.00; // Note G (392.00 Hz)
+                } else {
+                    freq = 261.63; // Note C (261.63 Hz)
+                }
+
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+                gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start();
+                osc.stop(ctx.currentTime + 0.35);
+            } catch (e) {
+                console.log("Audio playback notice:", e);
+            }
+        }
+
+        function playEndingAudioTheme(type) {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+
+                if (type === 'GOOD') {
+                    const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
+                    notes.forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                        gain.gain.setValueAtTime(0.15, now + idx * 0.12);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.4);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.12);
+                        osc.stop(now + idx * 0.12 + 0.4);
+                    });
+                } else if (type === 'NEUTRAL') {
+                    const notes = [392.00, 440.00, 392.00, 349.23];
+                    notes.forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.25);
+                        gain.gain.setValueAtTime(0.12, now + idx * 0.25);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.25 + 0.5);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.25);
+                        osc.stop(now + idx * 0.25 + 0.5);
+                    });
+                } else {
+                    const notes = [311.13, 293.66, 277.18, 261.63];
+                    notes.forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.2);
+                        gain.gain.setValueAtTime(0.1, now + idx * 0.2);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.2 + 0.4);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.2);
+                        osc.stop(now + idx * 0.2 + 0.4);
+                    });
+                }
+            } catch (e) {
+                console.log("Ending theme playback error:", e);
+            }
+        }
+
+        function initCityBg() {
+            const canvas = document.getElementById('city-bg-canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const stars = Array.from({ length: 70 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * (canvas.height * 0.6),
+                size: Math.random() > 0.8 ? 3 : 2,
+                alpha: Math.random()
+            }));
+
+            const vehicles = Array.from({ length: 6 }, () => ({
+                x: Math.random() * canvas.width,
+                y: canvas.height * 0.2 + Math.random() * (canvas.height * 0.35),
+                speed: 1 + Math.random() * 2,
+                color: Math.random() > 0.5 ? '#00f2fe' : '#f1c40f'
+            }));
+
+            function draw() {
+                ctx.fillStyle = '#05030a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                stars.forEach(s => {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                    ctx.fillRect(s.x, s.y, s.size, s.size);
+                    s.alpha += (Math.random() - 0.5) * 0.05;
+                    if (s.alpha < 0.2) s.alpha = 0.2;
+                    if (s.alpha > 0.9) s.alpha = 0.9;
+                });
+
+                const baseY = canvas.height * 0.75;
+                ctx.fillStyle = '#0a0816';
+                ctx.fillRect(0, baseY, canvas.width, canvas.height - baseY);
+
+                vehicles.forEach(v => {
+                    v.x += v.speed;
+                    if (v.x > canvas.width) v.x = -20;
+                    ctx.fillStyle = v.color;
+                    ctx.fillRect(v.x, v.y, 8, 3);
+                });
+
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        function drawPixelAvatar(canvasId, characterKey) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const P = {
+                bg: '#0a0816',
+                skin: '#fce4ec',
+                skinShadow: '#f8bbd0',
+                skinBlush: '#f472b6',
+                eyeWhite: '#ffffff',
+                eyeIris: '#1e1b4b',
+                eyeHighlight: '#ffffff',
+                lipTone: '#e11d48',
+                glasses: '#38bdf8',
+                glassesFrame: '#0284c7',
+                gold: '#ffd54f',
+
+                // Eugene: Pink hair, long shoulder-length
+                eugeneHair: '#ff69b4',
+                eugeneHairDark: '#db2777',
+                eugeneSuit: '#1e1b4b',
+
+                // Viken: Long brown hair & spectacles
+                vikenHair: '#78350f',
+                vikenHairDark: '#451a03',
+                vikenSuit: '#172554',
+
+                // Taho: Blonde hair (ear-length) & plaid shirt
+                tahoHair: '#fde047',
+                tahoHairDark: '#ca8a04',
+                tahoShirt1: '#ef4444',
+                tahoShirt2: '#ffffff',
+
+                // Soule: Blue hair and colorful striped shirt
+                souleHair: '#38bdf8',
+                souleHairDark: '#0284c7',
+                souleStripe1: '#ec4899',
+                souleStripe2: '#eab308',
+
+                // Avys: White hair and overalls with a green shirt underneath
+                avysHair: '#ffffff',
+                avysHairDark: '#cbd5e1',
+                avysOveralls: '#3b82f6',
+                avysGreenShirt: '#15803d'
+            };
+
+            ctx.fillStyle = P.bg;
+            ctx.fillRect(0, 0, 64, 64);
+
+            if (characterKey === 'EUGENE') {
+                // EUGENE: Pink hair, shoulder-length, confident eyes
+                ctx.fillStyle = P.eugeneSuit;
+                ctx.fillRect(18, 42, 28, 22);
+                ctx.fillStyle = P.gold;
+                ctx.fillRect(30, 42, 4, 22);
+
+                ctx.fillStyle = P.skinShadow;
+                ctx.fillRect(28, 38, 8, 5);
+                ctx.fillStyle = P.skin;
+                ctx.fillRect(22, 18, 20, 20);
+                ctx.fillRect(24, 38, 16, 2);
+
+                ctx.fillStyle = P.skinBlush;
+                ctx.fillRect(22, 29, 3, 2);
+                ctx.fillRect(39, 29, 3, 2);
+
+                ctx.fillStyle = P.eyeWhite;
+                ctx.fillRect(24, 25, 5, 4);
+                ctx.fillRect(35, 25, 5, 4);
+                ctx.fillStyle = P.eyeIris;
+                ctx.fillRect(26, 26, 3, 3);
+                ctx.fillRect(36, 26, 3, 3);
+                ctx.fillStyle = P.eyeHighlight;
+                ctx.fillRect(26, 25, 1, 1);
+                ctx.fillRect(36, 25, 1, 1);
+
+                ctx.fillStyle = P.lipTone;
+                ctx.fillRect(28, 35, 8, 1);
+                ctx.fillRect(34, 34, 3, 1);
+
+                // Long pink hair down to shoulders
+                ctx.fillStyle = P.eugeneHairDark;
+                ctx.fillRect(18, 12, 28, 8);
+                ctx.fillRect(12, 18, 8, 42);
+                ctx.fillRect(44, 18, 8, 42);
+                ctx.fillStyle = P.eugeneHair;
+                ctx.fillRect(20, 10, 24, 8);
+                ctx.fillRect(14, 18, 6, 40);
+                ctx.fillRect(44, 18, 6, 40);
+
+            } else if (characterKey === 'VIKEN') {
+                // VIKEN: Long brown hair & spectacles
+                ctx.fillStyle = P.vikenSuit;
+                ctx.fillRect(18, 42, 28, 22);
+                ctx.fillStyle = P.gold;
+                ctx.fillRect(30, 42, 4, 22);
+
+                ctx.fillStyle = P.skinShadow;
+                ctx.fillRect(28, 38, 8, 5);
+                ctx.fillStyle = P.skin;
+                ctx.fillRect(23, 18, 18, 20);
+                ctx.fillRect(25, 38, 14, 2);
+
+                ctx.fillStyle = P.glassesFrame;
+                ctx.fillRect(22, 23, 9, 7);
+                ctx.fillRect(33, 23, 9, 7);
+                ctx.fillRect(31, 26, 2, 2);
+                ctx.fillStyle = P.glasses;
+                ctx.fillRect(23, 24, 7, 5);
+                ctx.fillRect(34, 24, 7, 5);
+
+                ctx.fillStyle = P.eyeWhite;
+                ctx.fillRect(25, 25, 4, 3);
+                ctx.fillRect(36, 25, 4, 3);
+                ctx.fillStyle = P.eyeIris;
+                ctx.fillRect(26, 26, 2, 2);
+                ctx.fillRect(37, 26, 2, 2);
+
+                ctx.fillStyle = P.lipTone;
+                ctx.fillRect(29, 35, 6, 1);
+
+                // Long brown hair
+                ctx.fillStyle = P.vikenHairDark;
+                ctx.fillRect(18, 12, 28, 8);
+                ctx.fillRect(14, 18, 8, 40);
+                ctx.fillRect(42, 18, 8, 40);
+                ctx.fillStyle = P.vikenHair;
+                ctx.fillRect(20, 10, 24, 8);
+                ctx.fillRect(16, 16, 6, 38);
+                ctx.fillRect(42, 16, 6, 38);
+
+            } else if (characterKey === 'TAHO') {
+                // TAHO: Blonde hair ear-length & plaid shirt
+                ctx.fillStyle = P.tahoShirt1;
+                ctx.fillRect(18, 42, 28, 22);
+                ctx.fillStyle = P.tahoShirt2;
+                ctx.fillRect(22, 42, 4, 22);
+                ctx.fillRect(38, 42, 4, 22);
+
+                ctx.fillStyle = P.skinShadow;
+                ctx.fillRect(28, 38, 8, 5);
+                ctx.fillStyle = P.skin;
+                ctx.fillRect(21, 18, 22, 20);
+                ctx.fillRect(23, 38, 18, 2);
+
+                ctx.fillStyle = P.skinBlush;
+                ctx.fillRect(21, 28, 4, 3);
+                ctx.fillRect(39, 28, 4, 3);
+
+                ctx.fillStyle = P.eyeWhite;
+                ctx.fillRect(24, 24, 5, 5);
+                ctx.fillRect(35, 24, 5, 5);
+                ctx.fillStyle = P.eyeIris;
+                ctx.fillRect(25, 25, 3, 3);
+                ctx.fillRect(36, 25, 3, 3);
+                ctx.fillStyle = P.eyeHighlight;
+                ctx.fillRect(25, 25, 1, 1);
+                ctx.fillRect(36, 25, 1, 1);
+
+                ctx.fillStyle = P.lipTone;
+                ctx.fillRect(28, 34, 8, 2);
+                ctx.fillStyle = P.skin;
+                ctx.fillRect(29, 35, 6, 1);
+
+                ctx.fillStyle = P.tahoHairDark;
+                ctx.fillRect(18, 12, 28, 10);
+                ctx.fillRect(16, 20, 6, 14);
+                ctx.fillRect(42, 20, 6, 14);
+                ctx.fillStyle = P.tahoHair;
+                ctx.fillRect(20, 10, 24, 10);
+                ctx.fillRect(18, 18, 5, 14);
+                ctx.fillRect(41, 18, 5, 14);
+
+            } else if (characterKey === 'SOULE') {
+                // SOULE: Blue hair, colorful striped shirt
+                ctx.fillStyle = P.avysGreenShirt;
+                ctx.fillRect(18, 42, 28, 22);
+                ctx.fillStyle = P.souleStripe1;
+                ctx.fillRect(22, 46, 20, 3);
+                ctx.fillStyle = P.souleStripe2;
+                ctx.fillRect(22, 53, 20, 3);
+
+                ctx.fillStyle = P.skinShadow;
+                ctx.fillRect(27, 37, 10, 4);
+                ctx.fillStyle = P.skin;
+                ctx.fillRect(21, 17, 22, 21);
+                ctx.fillRect(23, 37, 18, 2);
+
+                ctx.fillStyle = P.eyeWhite;
+                ctx.fillRect(24, 24, 5, 5);
+                ctx.fillRect(35, 24, 5, 5);
+                ctx.fillStyle = P.eyeIris;
+                ctx.fillRect(26, 25, 3, 3);
+                ctx.fillRect(37, 25, 3, 3);
+                ctx.fillStyle = P.eyeHighlight;
+                ctx.fillRect(26, 25, 1, 1);
+                ctx.fillRect(37, 25, 1, 1);
+
+                ctx.fillStyle = P.lipTone;
+                ctx.fillRect(29, 34, 6, 2);
+                ctx.fillStyle = P.skin;
+                ctx.fillRect(30, 34, 4, 1);
+
+                ctx.fillStyle = P.souleHairDark;
+                ctx.fillRect(18, 10, 28, 9);
+                ctx.fillRect(15, 17, 7, 18);
+                ctx.fillRect(42, 17, 7, 18);
+                ctx.fillStyle = P.souleHair;
+                ctx.fillRect(20, 8, 24, 9);
+                ctx.fillRect(17, 15, 6, 16);
+                ctx.fillRect(41, 15, 6, 16);
+
+            } else if (characterKey === 'AVYS') {
+                // AVYS: White hair, overalls with green shirt underneath
+                ctx.fillStyle = P.avysGreenShirt;
+                ctx.fillRect(18, 42, 28, 22);
+                ctx.fillStyle = P.avysOveralls;
+                ctx.fillRect(22, 42, 5, 22);
+                ctx.fillRect(37, 42, 5, 22);
+
+                ctx.fillStyle = P.skinShadow;
+                ctx.fillRect(26, 36, 12, 5);
+                ctx.fillStyle = P.skin;
+                ctx.fillRect(20, 17, 24, 21);
+                ctx.fillRect(22, 37, 20, 2);
+
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(23, 23, 6, 2);
+                ctx.fillRect(35, 23, 6, 2);
+
+                ctx.fillStyle = P.eyeWhite;
+                ctx.fillRect(24, 25, 5, 4);
+                ctx.fillRect(35, 25, 5, 4);
+                ctx.fillStyle = P.eyeIris;
+                ctx.fillRect(26, 26, 2, 2);
+                ctx.fillRect(37, 26, 2, 2);
+
+                ctx.fillStyle = P.lipTone;
+                ctx.fillRect(28, 34, 8, 1);
+
+                ctx.fillStyle = P.avysHairDark;
+                ctx.fillRect(17, 10, 30, 9);
+                ctx.fillRect(14, 17, 7, 16);
+                ctx.fillRect(43, 17, 7, 16);
+                ctx.fillStyle = P.avysHair;
+                ctx.fillRect(19, 8, 26, 9);
+                ctx.fillRect(16, 15, 6, 15);
+                ctx.fillRect(42, 15, 6, 15);
+            }
+        }
+
+        const gameData = [
+            {
+                sceneIndex: 0,
+                location: "Grand Aetheria Embassy",
+                locationIcon: "fa-building-columns",
+                sceneTitle: "Scene 1: Welcoming Protocol",
+                characterKey: "EUGENE",
+                characterName: "Eugene",
+                characterRole: "Solarpunk Diplomat",
+                dialogue: "Welcome to Neo-Arcadia! As the head of welcoming protocols, I must evaluate your initial greeting and diplomatic demeanor. How do you address the High Council?",
+                choices: [
+                    {
+                        text: "A) 'Good day, esteemed representatives. It is an extraordinary honor to be welcomed into your magnificent city.'",
+                        points: 10,
+                        feedbackTitle: "Ideal Diplomatic Salutation",
+                        npcReaction: "Your tone is impeccably respectful and sophisticated. You honor our traditions perfectly!",
+                        feedbackText: "Exemplary formal register and high-level vocabulary ('esteemed representatives', 'extraordinary honor'). Demonstrates immediate diplomatic tact."
+                    },
+                    {
+                        text: "B) 'Hello everyone! Glad to finally arrive here in Neo-Arcadia today.'",
+                        points: 5,
+                        feedbackTitle: "Neutral Greeting",
+                        npcReaction: "Your greeting is friendly, though slightly casual for formal ambassadorial protocols.",
+                        feedbackText: "Grammatically correct and polite, but lacks the formal nuance required for high-stakes diplomatic environments."
+                    },
+                    {
+                        text: "C) 'Hi there! Let's get this meeting started quickly so I can see the city.'",
+                        points: 0,
+                        feedbackTitle: "Inappropriate Informality",
+                        npcReaction: "Such abruptness lacks the proper respect due to the High Council...",
+                        feedbackText: "Too informal and demanding. Using 'Hi there' and rushing the council creates an unfavorable first impression."
+                    }
+                ]
+            },
+            {
+                sceneIndex: 1,
+                location: "The Crystalline Bio-Dome",
+                locationIcon: "fa-seedling",
+                sceneTitle: "Scene 2: The Bio-Dome Proposal",
+                characterKey: "TAHO",
+                characterName: "Taho",
+                characterRole: "Eco-Architect",
+                dialogue: "Our bio-domes sustain harmony between nature and advanced magic. If we were to expand the energy grid, how would you propose we protect the delicate flora?",
+                choices: [
+                    {
+                        text: "A) 'If we were to integrate renewable mana-conduits, we would successfully preserve the natural habitat while boosting power.'",
+                        points: 10,
+                        feedbackTitle: "Advanced Second Conditional Mastery",
+                        npcReaction: "Splendid! Your grasp of conditional logic and ecological foresight is remarkable.",
+                        feedbackText: "Flawless use of the Second Conditional structure ('If we were..., we would...') coupled with precise eco-magical terminology."
+                    },
+                    {
+                        text: "B) 'If we expand the grid carefully, the plants will probably stay safe and healthy.'",
+                        points: 5,
+                        feedbackTitle: "Basic Conditional Structure",
+                        npcReaction: "Your point is clear, though the grammatical structure is quite standard.",
+                        feedbackText: "First conditional variation is acceptable, but uses basic phrasing ('will probably stay') instead of advanced modal nuance."
+                    },
+                    {
+                        text: "C) 'When you will build more energy towers, the plants are gonna be fine somehow.'",
+                        points: 0,
+                        feedbackTitle: "Grammatical Error in Conditional Clause",
+                        npcReaction: "Mixing future tenses in conditional clauses causes confusion in our bio-systems...",
+                        feedbackText: "Grammar violation: Do not use 'will' in the 'if' clause. Also, colloquialisms like 'gonna' lower formal academic precision."
+                    }
+                ]
+            },
+            {
+                sceneIndex: 2,
+                location: "The Hall of Harmonious Debate",
+                locationIcon: "fa-scale-balanced",
+                sceneTitle: "Scene 3: Social Conflict Mediation",
+                characterKey: "VIKEN",
+                characterName: "Viken",
+                characterRole: "Senior Philosopher",
+                dialogue: "A disagreement has arisen regarding how magical energy is distributed among outer districts. How would you approach calming this tension?",
+                choices: [
+                    {
+                        text: "A) 'I propose we talk things over and look into alternative solutions to bring about a peaceful resolution.'",
+                        points: 10,
+                        feedbackTitle: "Expert Phrasal Verb & Empathy Usage",
+                        npcReaction: "Your diplomatic empathy and mastery of phrasing soothe the tension instantly.",
+                        feedbackText: "Excellent integration of emotional phrasal verbs ('talk things over', 'look into') combined with a calm, empathetic tone."
+                    },
+                    {
+                        text: "B) 'We should handle the problem and fix the issue as soon as possible.'",
+                        points: 5,
+                        feedbackTitle: "Standard Direct Phrasing",
+                        npcReaction: "Direct action is fine, but it lacks the gentle nuance our citizens value.",
+                        feedbackText: "Clear and understandable, but uses basic verbs ('handle', 'fix') rather than nuanced diplomatic phrasal verbs."
+                    },
+                    {
+                        text: "C) 'You need to calm down and just deal with whatever rules are given.'",
+                        points: 0,
+                        feedbackTitle: "Blunt and Authoritarian Tone",
+                        npcReaction: "Commanding citizens to calm down only aggravates the discord!",
+                        feedbackText: "Commanding language ('You need to') and dismissive phrasing ('just deal with') cause severe diplomatic friction."
+                    }
+                ]
+            },
+            {
+                sceneIndex: 3,
+                location: "The Aether Network Core",
+                locationIcon: "fa-microchip",
+                sceneTitle: "Scene 4: Aether Network Audit",
+                characterKey: "SOULE",
+                characterName: "Soule",
+                characterRole: "Cyber-Hacker Liaison",
+                dialogue: "Our data-streams are fluctuating due to an influx of foreign inquiries. Consequently, we must optimize our bandwidth. What is your formal recommendation?",
+                choices: [
+                    {
+                        text: "A) 'Furthermore, whereas data latency threatens our servers, we must therefore implement decentralized routing.'",
+                        points: 10,
+                        feedbackTitle: "Mastery of Formal Cohesive Devices",
+                        npcReaction: "Magnificent technical reasoning! Your logical connectors structure the argument with pristine clarity.",
+                        feedbackText: "Sophisticated use of academic cohesive devices ('Furthermore', 'whereas', 'therefore') ensuring impeccable formal argumentation."
+                    },
+                    {
+                        text: "B) 'Also, because the server is slow, we need to upgrade the network routing.'",
+                        points: 5,
+                        feedbackTitle: "Standard Argumentation",
+                        npcReaction: "Your logic is sound, though the connective tissue is rather basic.",
+                        feedbackText: "Functional, but relies on elementary connectors ('Also', 'because') rather than advanced academic transition words."
+                    },
+                    {
+                        text: "C) 'So basically the network is crashing out, meaning we gotta fix it ASAP.'",
+                        points: 0,
+                        feedbackTitle: "Excessive Slang & Informal Connectors",
+                        npcReaction: "Such informal slang is unsuitable for critical infrastructure audits.",
+                        feedbackText: "Inappropriate use of slang ('crashing out', 'gotta', 'ASAP') in a high-level technological audit."
+                    }
+                ]
+            },
+            {
+                sceneIndex: 4,
+                location: "The Pinnacle Spire",
+                locationIcon: "fa-chess-queen",
+                sceneTitle: "Scene 5: Final Convergence & Decision",
+                characterKey: "AVYS",
+                characterName: "Avys",
+                characterRole: "Grand Council Sage",
+                dialogue: "This is your final test before the Council. Summarize your ultimate vision for Neo-Arcadia's future relationship with the outside world.",
+                choices: [
+                    {
+                        text: "A) 'Ultimately, by fostering mutual trust and collaborative innovation, we shall illuminate a path toward enduring unity.'",
+                        points: 10,
+                        feedbackTitle: "Transcendent Rhetorical Synthesis",
+                        npcReaction: "Breathtaking! Your eloquence unites magic and technology in perfect harmony.",
+                        feedbackText: "Masterclass in persuasive synthesis. Flawless elevated vocabulary, inspirational cadence, and absolute diplomatic brilliance."
+                    },
+                    {
+                        text: "B) 'In the end, working together will help us build a strong and peaceful future for everyone.'",
+                        points: 5,
+                        feedbackTitle: "Solid Standard Conclusion",
+                        npcReaction: "A commendable and honest sentiment, even if somewhat conventional.",
+                        feedbackText: "Clear and polite, but lacks the poetic resonance and rhetorical polish of a master diplomat."
+                    },
+                    {
+                        text: "C) 'Whatever happens, just let me in so I can take credit for everything.'",
+                        points: 0,
+                        feedbackTitle: "Egocentric & Impoverished Tone",
+                        npcReaction: "Such self-centered ambition has no place in our utopian society.",
+                        feedbackText: "Self-serving phrasing ('take credit for everything') demonstrates complete disregard for cooperative diplomacy."
+                    }
+                ]
+            }
+        ];
+
+        function loadScene(index) {
+            currentSceneIndex = index;
+            const scene = gameData[index];
+
+            if (sceneIndicator) sceneIndicator.innerText = `SCENE ${index + 1} / 5`;
+            if (locationBadge) locationBadge.innerText = `LOCATION: ${scene.location}`;
+            if (sceneTitle) sceneTitle.innerText = scene.sceneTitle;
+            if (locationIcon) locationIcon.className = `fa-solid ${scene.locationIcon}`;
+
+            if (npcName) npcName.innerText = scene.characterName;
+            if (npcRoleTag) npcRoleTag.innerText = scene.characterRole;
+
+            drawPixelAvatar('npc-pixel-canvas', scene.characterKey);
+
+            if (dialogueText) dialogueText.innerText = `"${scene.dialogue}"`;
+
+            if (feedbackPanel) feedbackPanel.classList.add('hidden');
+
+            renderChoices(scene.choices);
+        }
+
+        function renderChoices(choices) {
+            if (!choicesContainer) return;
+            choicesContainer.innerHTML = '';
+
+            choices.forEach((choice, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "pixel-btn w-full text-left p-3.5 bg-black/90 hover:bg-purple-950/80 text-slate-100 text-base sm:text-lg font-rajdhani font-semibold transition-all flex items-center justify-between group";
+                btn.innerHTML = `
+                    <span class="flex-1 pr-3">${choice.text}</span>
+                    <i class="fa-solid fa-chevron-right text-cyan-400 group-hover:translate-x-1 transition-transform"></i>
+                `;
+                btn.onclick = () => handleChoice(choice);
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        function handleChoice(choice) {
+            playFeedbackSound(choice.points);
+            totalAffinity += choice.points;
+            if (totalAffinity > maxAffinity) totalAffinity = maxAffinity;
+            updateAffinityHUD();
+
+            if (choicesContainer) choicesContainer.innerHTML = '';
+
+            if (feedbackPanel) {
+                feedbackPanel.classList.remove('hidden');
+                
+                const currentScene = gameData[currentSceneIndex];
+                const speakerSpan = document.getElementById('npc-reaction-speaker');
+                const reactionTextSpan = document.getElementById('npc-reaction-text');
+                if (speakerSpan) speakerSpan.innerText = `[${currentScene.characterName}]:`;
+                if (reactionTextSpan) reactionTextSpan.innerText = `"${choice.npcReaction}"`;
+
+                if (feedbackTitle) {
+                    feedbackTitle.innerText = choice.feedbackTitle;
+                    if (choice.points === 10) {
+                        feedbackTitle.className = "font-bold text-sm uppercase tracking-wider text-cyan-300";
+                    } else if (choice.points === 5) {
+                        feedbackTitle.className = "font-bold text-sm uppercase tracking-wider text-amber-300";
+                    } else {
+                        feedbackTitle.className = "font-bold text-sm uppercase tracking-wider text-rose-400";
+                    }
+                }
+
+                if (feedbackScore) {
+                    feedbackScore.innerText = `+${choice.points} PTS`;
+                    if (choice.points === 10) {
+                        feedbackScore.className = "font-pixel text-[10px] px-2 py-1 bg-cyan-950 text-cyan-300 border border-cyan-400";
+                    } else if (choice.points === 5) {
+                        feedbackScore.className = "font-pixel text-[10px] px-2 py-1 bg-amber-950 text-amber-300 border border-amber-400";
+                    } else {
+                        feedbackScore.className = "font-pixel text-[10px] px-2 py-1 bg-rose-950 text-rose-300 border border-rose-500";
+                    }
+                }
+
+                if (feedbackIcon) {
+                    if (choice.points === 10) {
+                        feedbackIcon.className = "fa-solid fa-circle-check text-cyan-400 text-base";
+                    } else if (choice.points === 5) {
+                        feedbackIcon.className = "fa-solid fa-circle-exclamation text-amber-400 text-base";
+                    } else {
+                        feedbackIcon.className = "fa-solid fa-circle-xmark text-rose-400 text-base";
+                    }
+                }
+
+                if (feedbackText) feedbackText.innerText = choice.feedbackText;
+            }
+        }
+
+        function updateAffinityHUD() {
+            if (affinityText) affinityText.innerText = `${totalAffinity} / ${maxAffinity} PTS`;
+            if (affinityBar) {
+                const percentage = (totalAffinity / maxAffinity) * 100;
+                affinityBar.style.width = `${percentage}%`;
+            }
+        }
+
+        function startGame() {
+            if (introModal) introModal.classList.add('hidden');
+            loadScene(0);
+        }
+
+        function triggerEnding() {
+            if (endingModal) endingModal.classList.remove('hidden');
+
+            const endingTitle = document.getElementById('ending-title');
+            const endingSubtitle = document.getElementById('ending-subtitle');
+            const endingScore = document.getElementById('ending-score');
+            const endingDescription = document.getElementById('ending-description');
+            const endingSpeakerName = document.getElementById('ending-speaker-name');
+            const endingSpeakerRole = document.getElementById('ending-speaker-role');
+            const endingCharacterDialogue = document.getElementById('ending-character-dialogue');
+
+            if (endingScore) endingScore.innerText = `Final Affinity Score: ${totalAffinity} / ${maxAffinity} PTS`;
+
+            if (totalAffinity >= 40) {
+                playEndingAudioTheme('GOOD');
+                drawPixelAvatar('ending-npc-canvas', 'EUGENE');
+                if (endingSpeakerName) endingSpeakerName.innerText = "Eugene";
+                if (endingSpeakerRole) endingSpeakerRole.innerText = "Solarpunk Diplomat";
+                if (endingTitle) endingTitle.innerText = "Harmonious Equilibrium";
+                if (endingSubtitle) {
+                    endingSubtitle.innerText = "GOOD ENDING • AMBASSADOR STATUS";
+                    endingSubtitle.className = "text-[10px] font-pixel tracking-widest uppercase text-cyan-300 px-3 py-1 bg-black border border-cyan-400";
+                }
+                if (endingCharacterDialogue) endingCharacterDialogue.innerText = `"Your command of nuanced language and high diplomatic etiquette has inspired the entire High Council! We are honored to bestow upon you the title of Principal Cultural Ambassador of Neo-Arcadia."`;
+                if (endingDescription) endingDescription.innerText = "Your exceptional rhetoric and linguistic precision persuaded all leaders. You will permanently represent foreign relations in the city.";
+
+            } else if (totalAffinity >= 25) {
+                playEndingAudioTheme('NEUTRAL');
+                drawPixelAvatar('ending-npc-canvas', 'TAHO');
+                if (endingSpeakerName) endingSpeakerName.innerText = "Taho";
+                if (endingSpeakerRole) endingSpeakerRole.innerText = "Eco-Architect";
+                if (endingTitle) endingTitle.innerText = "Stagnant Stability";
+                if (endingSubtitle) {
+                    endingSubtitle.innerText = "NEUTRAL ENDING • JUNIOR ADMINISTRATOR";
+                    endingSubtitle.className = "text-[10px] font-pixel tracking-widest uppercase text-amber-400 px-3 py-1 bg-black border border-amber-400";
+                }
+                if (endingCharacterDialogue) endingCharacterDialogue.innerText = `"Your technical communication is functional, but your dialogue lacks the emotional depth and advanced diplomacy required for ambassador status. We offer you a junior administrative desk."`;
+                if (endingDescription) endingDescription.innerText = "Your linguistic competence was clear, but the lack of formal nuance kept you from forming a deep connection with the Council.";
+
+            } else {
+                playEndingAudioTheme('BAD');
+                drawPixelAvatar('ending-npc-canvas', 'SOULE');
+                if (endingSpeakerName) endingSpeakerName.innerText = "Soule";
+                if (endingSpeakerRole) endingSpeakerRole.innerText = "Cyber-Hacker Liaison";
+                if (endingTitle) endingTitle.innerText = "Diplomatic Collapse";
+                if (endingSubtitle) {
+                    endingSubtitle.innerText = "BAD ENDING • REASSIGNMENT DECREE";
+                    endingSubtitle.className = "text-[10px] font-pixel tracking-widest uppercase text-rose-400 px-3 py-1 bg-black border border-rose-500";
+                }
+                if (endingCharacterDialogue) endingCharacterDialogue.innerText = `"Regrettably, your tone was perceived as blunt and grammatically imprecise during our network and council audits. In a city built on empathetic harmony, your communication style creates friction. You are reassigned outside the city limits."`;
+                if (endingDescription) endingDescription.innerText = "Communication errors and overly informal phrasing resulted in intercultural misunderstandings, leading to your reassignment outside the utopia.";
+            }
+        }
+
+        function restartGame() {
+            currentSceneIndex = 0;
+            totalAffinity = 0;
+            updateAffinityHUD();
+            if (endingModal) endingModal.classList.add('hidden');
+            loadScene(0);
+        }
+
+        window.onload = function() {
+            initDOMReferences();
+            initCityBg();
+            loadScene(0);
+        };
+    </script>
+</body>
+</html>
